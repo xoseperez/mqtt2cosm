@@ -63,14 +63,14 @@ class MQTT2Cosm(Daemon):
             time.sleep(3)
             self.mqtt_connect()
 
-    def mqtt_on_subscribe(self, mosq, obj, mid, qos_list):
+    def mqtt_on_subscribe(self, obj, mid, qos_list):
         self.log("Subscription with mid %s received." % mid)
 
-    def mqtt_on_message(self, mosq, obj, msg):
+    def mqtt_on_message(self, obj, msg):
         feed = self.feeds.get(msg.topic, None)
         if feed:
-            cosm.push(feed['feed'], feed['datastream'], msg.value)
-            self.log("[DEBUG] Routed message from %s to %s:%s = %s" % (msg.topic, feed['feed'], feed['datastream'], msg.value))
+            cosm.push(feed['feed'], feed['datastream'], msg.payload)
+            self.log("[DEBUG] Message routed from %s to %s:%s = %s" % (msg.topic, feed['feed'], feed['datastream'], msg.payload))
 
     def run(self):
 
@@ -78,7 +78,6 @@ class MQTT2Cosm(Daemon):
         self.mqtt_connect()
 
         while True:
-            time.sleep(1)
             self.mqtt.loop()
 
 if __name__ == "__main__":
