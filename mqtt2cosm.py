@@ -99,6 +99,7 @@ if __name__ == "__main__":
     mqtt.qos = config.get('mqtt', 'qos')
     mqtt.retain = config.get('mqtt', 'retain')
     mqtt.status_topic = config.get('mqtt', 'status_topic')
+    mqtt.set_will = config.get('mqtt', 'set_will')
     manager.mqtt = mqtt
 
     cosm = Cosm(config.get('cosm', 'api_key'))
