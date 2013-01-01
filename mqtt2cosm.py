@@ -11,6 +11,7 @@ __license__ = 'TBD'
 import sys
 import time
 from datetime import datetime
+import ctypes
 
 from libs.Daemon import Daemon
 from libs.Config import Config
@@ -69,8 +70,9 @@ class MQTT2Cosm(Daemon):
     def mqtt_on_message(self, obj, msg):
         feed = self.feeds.get(msg.topic, None)
         if feed:
-            cosm.push(feed['feed'], feed['datastream'], msg.payload)
-            self.log("[DEBUG] Message routed from %s to %s:%s = %s" % (msg.topic, feed['feed'], feed['datastream'], msg.payload))
+            message = ctypes.string_at(msg.payload, msg.payloadlen)
+            self.log("[DEBUG] Message routed from %s to %s:%s = %s" % (msg.topic, feed['feed'], feed['datastream'], message))
+            cosm.push(feed['feed'], feed['datastream'], message)
 
     def run(self):
 
