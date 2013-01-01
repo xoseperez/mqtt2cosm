@@ -12,6 +12,7 @@ mqtt:
     clean_session: False
     qos: 0
     status_topic: /service/mqtt2cosm/status
+    set_will: False
 
 cosm:
     api_key: AAABBBCCC

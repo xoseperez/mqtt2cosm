@@ -14,11 +14,11 @@ class Mosquitto(_Mosquitto):
     qos = 0
     retain = False
     status_topic = '/service/xbee2mqtt/status'
-    username = None
-    password = None
+    set_will = False
 
     def connect(self):
-        self.will_set(self.status_topic, "0", self.qos, self.retain)
+        if self.set_will:
+            self.will_set(self.status_topic, "0", self.qos, self.retain)
         _Mosquitto.connect(self, self.host, self.port, self.keepalive, self.clean_session)
 
     def publish(self, topic, value):
@@ -26,4 +26,5 @@ class Mosquitto(_Mosquitto):
 
     def send_connected(self):
         self.publish(self.status_topic, "1")
+
 
