@@ -70,7 +70,10 @@ class MQTT2Cosm(Daemon):
     def mqtt_on_message(self, obj, msg):
         feed = self.feeds.get(msg.topic, None)
         if feed:
-            message = ctypes.string_at(msg.payload, msg.payloadlen)
+            try:
+                message = ctypes.string_at(msg.payload, msg.payloadlen)
+            except:
+                message = msg.payload
             self.log("[DEBUG] Message routed from %s to %s:%s = %s" % (msg.topic, feed['feed'], feed['datastream'], message))
             cosm.push(feed['feed'], feed['datastream'], message)
 
