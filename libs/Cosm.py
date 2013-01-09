@@ -4,6 +4,7 @@
 
 import urllib2
 import json
+import datetime
 
 class Cosm(object):
 
@@ -11,26 +12,26 @@ class Cosm(object):
     timeout = 10
 
     datapoints = []
-    cosm_datapoint = "http://api.cosm.com/v2/feeds/%s/datastreams/%s/datapoints.json"
-    cosm_datastream = "http://api.cosm.com/v2/feeds/%s/datastreams/%s.json"
+    base_url = "http://api.cosm.com/v2/feeds/%s/datastreams/%s"
 
     def __init__(self, api_key):
         self.api_key = api_key
 
-    def _send(self, method, url, data):
+    def _send(self, method, url, data = None):
 
-        data = json.dumps(data)
-        response = True
+        output = True
 
         try:
             request = urllib2.Request(url)
             request.get_method = lambda: method
             request.add_header("X-ApiKey", self.api_key)
-            urllib2.urlopen(request, data, self.timeout)
+            response = urllib2.urlopen(request, data, self.timeout)
+            output = response.read()
+            response.close()
         except:
-            response = False
+            output = False
 
-        return response
+        return output
 
     def clear(self):
         self.datapoints = []
@@ -39,19 +40,30 @@ class Cosm(object):
         self.datapoints.append({'at': at, 'value': value})
 
     def send(self, feed, datastream):
-        url = self.cosm_datapoint % (feed, datastream)
-        data = {'datapoints' : self.datapoints}
+        url = self.base_url % (feed, datastream) + "/datapoints.json"
+        data = json.dumps({'datapoints' : self.datapoints})
         response = self._send('POST', url, data)
         return response
 
-    def push(self, feed, datastream, value):
-        url = self.cosm_datastream % (feed, datastream)
-        data = {'current_value' : value}
-        return self._send('PUT', url, data)
+    def get(self, feed, datastream, start, end, step=360):
 
-if __name__ == '__main__':
-    cosm = Cosm('QFUdRPODMAkYLHx8LcuvPdECCTiSAKxwME9hb3luSVlvdz0g')
-    cosm.add('2012-12-27T14:30:00+01:00', 1430)
-    cosm.add('2012-12-27T15:30:00+01:00', 1530)
-    print cosm.send(94914, 1)
-    print cosm.push(94914, 1, 950)
+        ts_start = start
+        step = datetime.timedelta(minutes=step)
+        url = self.base_url % (feed, datastream)
+        counter = 1
+
+        while ts_start < end:
+            ts_end = min(ts_start + step, end)
+            data = "limit=1000&interval=0&start=%s&end=%s" % (ts_start.isoformat(), ts_end.isoformat())
+            response = self._send('GET', url + "?c=" + str(counter), data)
+            response = json.loads(response)
+            for datapoint in  response['datapoints']:
+                yield [datapoint['at'], datapoint['value']]
+            ts_start = ts_end
+            counter = counter + 1
+
+
+    def push(self, feed, datastream, value):
+        url = self.base_url % (feed, datastream) + ".json"
+        data = json.dumps({'current_value' : value})
+        return self._send('PUT', url, data)
