@@ -57,8 +57,9 @@ class Cosm(object):
             data = "limit=1000&interval=0&start=%s&end=%s" % (ts_start.isoformat(), ts_end.isoformat())
             response = self._send('GET', url + "?c=" + str(counter), data)
             response = json.loads(response)
-            for datapoint in  response['datapoints']:
-                yield [datapoint['at'], datapoint['value']]
+            if 'datapoints' in response:
+                for datapoint in  response['datapoints']:
+                    yield [datapoint['at'], datapoint['value']]
             ts_start = ts_end
             counter = counter + 1
 
